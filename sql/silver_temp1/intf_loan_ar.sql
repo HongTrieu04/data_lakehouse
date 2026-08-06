@@ -1,6 +1,6 @@
 -- ====================================================================
 -- TASK 9: INTF_LOAN_AR (Interface Loan Arrangement - Technical Silver Temp1)
--- Source: AR_BAL JOIN 7 Silver tables (LOAN_AR, LOAN_AR_PRFL, AR_RATE_HIST, AR_DLQ_SMY, EXG_RATE, OU, AST_AR_INT_SMY)
+-- Source: AR_BAL LEFT JOIN 7 Silver tables (LOAN_AR, LOAN_AR_PRFL, AR_RATE_HIST, AR_DLQ_SMY, EXG_RATE, OU, AST_AR_INT_SMY)
 -- Target: intf_loan_ar (Silver Temp1 Layer)
 -- ====================================================================
 
@@ -55,9 +55,9 @@ SELECT
     '0'                                                 AS ODUE_PS_AMT,
     current_timestamp()                                 AS SYS_UDT_DT
 FROM ar_bal a
-JOIN loan_ar b ON a.AR_ID = b.AR_ID
-JOIN loan_ar_prfl c ON a.AR_ID = c.AR_ID
-JOIN ar_rate_hist d ON a.AR_ID = d.AR_ID
+LEFT JOIN loan_ar b ON a.AR_ID = b.AR_ID
+LEFT JOIN loan_ar_prfl c ON a.AR_ID = c.AR_ID
+LEFT JOIN ar_rate_hist d ON a.AR_ID = d.AR_ID
 LEFT JOIN ar_dlq_smy e ON a.AR_ID = e.AR_ID
 LEFT JOIN (
     SELECT ORIG_AR_ID,

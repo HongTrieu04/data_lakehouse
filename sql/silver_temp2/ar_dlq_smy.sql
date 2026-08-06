@@ -10,9 +10,9 @@ WITH filtered_pd AS (
     LEFT JOIN bz_t24core_pd_payment_due b ON a.RECID = b.RECID
     WHERE a.FLAG_STATUS = 'LIVE'
       AND a.PAY_TYPE IN ('PR', 'IN')
-      AND COALESCE(CAST(a.PD_TYPE AS INT), 0) <> 1
+      AND COALESCE(TRY_CAST(a.PD_TYPE AS INT), 0) <> 1
       AND (a.RECORD_STATUS IS NULL OR a.RECORD_STATUS <> 'REVE')
-      AND CAST(a.PAY_AMT_OUTS AS DECIMAL(18,2)) > 0
+      AND TRY_CAST(a.PAY_AMT_OUTS AS DECIMAL(18,2)) > 0
 )
 SELECT 
     sha2(concat('T24_LD_LOANS_AND_DEPOSITS', SUBSTRING(RECID, 1, 14)), 256) AS AR_ID,
@@ -25,10 +25,10 @@ SELECT
     MIN(CASE WHEN PAY_TYPE = 'IN' OR (CATEGORY = '21069' AND PAY_TYPE = 'PR') 
              THEN TO_DATE(PAYMENT_DTE_DUE, 'yyyyMMdd') END)                AS INT_PAST_DUE_DT,
     MIN(CASE WHEN PAY_TYPE = 'PR' AND CATEGORY <> '21069' 
-             THEN CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)                AS PNP_ARS,
+             THEN TRY_CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)            AS PNP_ARS,
     MIN(CASE WHEN PAY_TYPE = 'IN' OR (CATEGORY = '21069' AND PAY_TYPE = 'PR') 
-             THEN CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)                AS INT_ARS,
-    MAX(CAST(SNQH_CHUYENDOI AS INT))                                       AS ADDITION_DYS_IN_ARS,
+             THEN TRY_CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)            AS INT_ARS,
+    MAX(TRY_CAST(SNQH_CHUYENDOI AS INT))                                   AS ADDITION_DYS_IN_ARS,
     current_timestamp()                                                    AS SYS_UDT_DT
 FROM filtered_pd
 GROUP BY SUBSTRING(RECID, 1, 14), 
