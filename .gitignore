@@ -1,0 +1,149 @@
+# =============================================
+# ENVIRONMENT & SECRETS (QUAN TRỌNG NHẤT)
+# =============================================
+.env
+.env.local
+.env.production
+.env.*.local
+!.env.sample
+
+# =============================================
+# PYTHON
+# =============================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.whl
+pip-log.txt
+pip-delete-this-directory.txt
+.Python
+develop-eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# PyTest & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# =============================================
+# AIRFLOW
+# =============================================
+airflow/logs/
+airflow/airflow-webserver.pid
+airflow/airflow.db
+airflow/standalone_admin_password.txt
+
+# =============================================
+# SPARK
+# =============================================
+spark_jobs/metastore_db/
+spark_jobs/derby.log
+spark_jobs/spark-warehouse/
+*.jar
+
+# =============================================
+# HIVE
+# =============================================
+metastore_db/
+derby.log
+
+# =============================================
+# DOCKER
+# =============================================
+# Docker volumes data (generated at runtime)
+infra/data/
+infra/postgres-data/
+infra/minio-data/
+
+# =============================================
+# IDE & EDITORS
+# =============================================
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains (PyCharm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# =============================================
+# OS GENERATED FILES
+# =============================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*.directory
+
+# =============================================
+# LOGS & TEMP FILES
+# =============================================
+*.log
+logs/
+tmp/
+temp/
+
+# =============================================
+# DATA FILES (quá lớn cho Git)
+# =============================================
+*.csv
+*.parquet
+*.avro
+*.orc
+*.xlsx
+*.xls
+!context_requirment/**/*.csv
+!context_requirment/**/*.xlsx
+
+# =============================================
+# JUPYTER NOTEBOOK
+# =============================================
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# =============================================
+# MISC
+# =============================================
+*.bak
+*.tmp
+*.orig
+.gemini/
