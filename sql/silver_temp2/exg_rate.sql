@@ -6,20 +6,20 @@
 
 WITH cur_live AS (
     SELECT 
-        ID                                              AS FRST_CCY_CODE,
-        'VND'                                           AS SCD_CCY_CODE,
-        CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
-        DATE_TIME                                       AS DATE_TIME_VAL,
-        999999                                          AS CURR_NO
+        ID                                                       AS FRST_CCY_CODE,
+        'VND'                                                    AS SCD_CCY_CODE,
+        TRY_CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
+        DATE_TIME                                                AS DATE_TIME_VAL,
+        999999                                                   AS CURR_NO
     FROM bz_pg_t24core_currency
 ),
 cur_his AS (
     SELECT 
-        SPLIT(ID, ';')[0]                               AS FRST_CCY_CODE,
-        'VND'                                           AS SCD_CCY_CODE,
-        CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
-        DATE_TIME                                       AS DATE_TIME_VAL,
-        CAST(CURR_NO AS INT)                            AS CURR_NO
+        SPLIT(ID, ';')[0]                                        AS FRST_CCY_CODE,
+        'VND'                                                    AS SCD_CCY_CODE,
+        TRY_CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
+        DATE_TIME                                                AS DATE_TIME_VAL,
+        TRY_CAST(CURR_NO AS INT)                                 AS CURR_NO
     FROM bz_pg_t24core_currency_his
 ),
 cur_combined AS (
@@ -33,11 +33,11 @@ cur_ranked AS (
     FROM cur_combined
 )
 SELECT 
-    current_date()                                      AS SNPST_DT,
-    'T24_CURRENCY'                                      AS SRC_STM_CODE,
+    current_date()                                               AS SNPST_DT,
+    'T24_CURRENCY'                                               AS SRC_STM_CODE,
     FRST_CCY_CODE,
     SCD_CCY_CODE,
     MID_RATE,
-    current_timestamp()                                 AS SYS_UDT_DT
+    current_timestamp()                                          AS SYS_UDT_DT
 FROM cur_ranked
 WHERE rn = 1;
