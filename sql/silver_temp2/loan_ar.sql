@@ -80,10 +80,13 @@ his_branch AS (
         PRODUCTGR_CODE                                       AS PD_CODE,
         'T24_LD_LOANS_AND_DEPOSITS_HIS'                      AS SRC_STM_CODE,
         current_date()                                       AS SYS_EFF_DT,
-        TO_DATE('9999-12-31', 'yyyy-MM-dd')                 AS SYS_EXP_DT,
+        TO_DATE('9999-12-31', 'yyyy-MM-dd')                    AS SYS_EXP_DT,
         current_timestamp()                                  AS SYS_UDT_DT
     FROM bz_t24core_ld_loans_and_deposits_his
-    WHERE SPLIT(RECID, ';')[0] NOT IN (SELECT RECID FROM bz_t24core_ld_loans_and_deposits)
+    WHERE NOT EXISTS (
+        SELECT 1 FROM bz_t24core_ld_loans_and_deposits live 
+        WHERE live.RECID = SPLIT(bz_t24core_ld_loans_and_deposits_his.RECID, ';')[0]
+    )
 )
 SELECT * FROM live_branch
 UNION ALL
