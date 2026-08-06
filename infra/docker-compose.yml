@@ -3,7 +3,7 @@ x-airflow-common-env: &airflow-common-env
   AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
   AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_AIRFLOW_USER:-airflow}:${POSTGRES_AIRFLOW_PASSWORD:-airflow_pass}@postgres-airflow:5432/${POSTGRES_AIRFLOW_DB:-airflow_db}
   AIRFLOW__CORE__FERNET_KEY: '${FERNET_KEY:-46BKxy25a2q8AByuhZNAbCslqHAqqJeu45lZ_MBYko8=}'
-  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+  AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
   AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
   AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
   AIRFLOW__API_AUTH__JWT_SECRET: 'airflow_jwt_secret'
