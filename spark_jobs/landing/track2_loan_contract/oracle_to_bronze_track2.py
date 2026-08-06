@@ -5,7 +5,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from spark_jobs.common.spark_session import get_spark
 from spark_jobs.common.oracle_utils import read_oracle_table
-from spark_jobs.common.io_utils import write_iceberg_table, write_parquet
+from spark_jobs.common.io_utils import write_parquet
 from pyspark.sql import functions as F
 
 # 21 Oracle Source Tables mapping definition for Track 2 (Tasks 9-12)
@@ -60,12 +60,11 @@ def ingest_oracle_to_bronze(etl_date: str = "2026-08-06", target_table: str = No
                 .withColumn("SRC_SYSTEM", F.lit(item["schema"])) \
                 .withColumn("ETL_BATCH_ID", F.lit(etl_date))
 
-            # Save to MinIO Bronze bucket as Iceberg / Parquet
+            # Save to MinIO Bronze bucket as raw Parquet
             target_path = f"s3a://bronze/{trg_table}/{etl_date}/"
             write_parquet(df_bronze, target_path, mode="overwrite")
-            write_iceberg_table(df_bronze, trg_table, mode="overwrite")
 
-            print(f"[SUCCESS] Successfully ingested {src_table} -> {trg_table} ({df_bronze.count()} records)")
+            print(f"[SUCCESS] Successfully ingested {src_table} -> {trg_table}")
         except Exception as e:
             print(f"[ERROR] Failed to ingest {src_table}: {str(e)}")
             raise e

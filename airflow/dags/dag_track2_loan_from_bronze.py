@@ -11,57 +11,18 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-ORACLE_TRACK2_TABLES = [
-    {"target": "bz_t24core_ld_loans_and_deposits"},
-    {"target": "bz_t24core_ld_loans_and_deposits_his"},
-    {"target": "bz_flexbo_pgb_ldtb_contract_master"},
-    {"target": "bz_flexbo_pgb_los_contract_fields_tdate"},
-    {"target": "bz_los_app_loan_disbursement"},
-    {"target": "bz_los_app_facility"},
-    {"target": "bz_los_app_product"},
-    {"target": "bz_t24core_customer"},
-    {"target": "bz_ebanking_col_udf_value"},
-    {"target": "bz_flexbo_pgb_contract_udf_map"},
-    {"target": "bz_flexbo_pgbld_contract_udfield_hist"},
-    {"target": "bz_t24core_mb_mg_saving_multi"},
-    {"target": "bz_flexbo_pgbld_rt_contract_udfield_hist"},
-    {"target": "bz_source_saoke_mvmt"},
-    {"target": "bz_source_saoke_crb"},
-    {"target": "bz_t24core_stmt_entry"},
-    {"target": "bz_t24core_pd_payment_due_his_mv"},
-    {"target": "bz_t24core_pd_payment_due"},
-    {"target": "bz_t24core_company"},
-    {"target": "bz_pg_t24core_currency"},
-    {"target": "bz_pg_t24core_currency_his"},
-]
-
 with DAG(
-    dag_id='dag_track2_loan',
+    dag_id='dag_track2_loan_from_bronze',
     default_args=default_args,
-    description='Standalone Pipeline for Track 2 Loan Contract Domain (Tasks 9-12)',
+    description='Standalone Track 2 Pipeline (Tasks 9-12) starting directly from existing MinIO Bronze data',
     schedule='0 3 * * *',
     catchup=False,
-    max_active_tasks=2,    # Giới hạn tối đa 2 task Spark chạy đồng thời để bảo vệ RAM/CPU
-    tags=['track2', 'loan_contract', 'fresher2'],
+    max_active_tasks=2,
+    tags=['track2', 'loan_contract', 'from_bronze', 'fresher2'],
 ) as dag:
 
     # ----------------------------------------------------
-    # PHASE 0: Oracle Source -> Landing / Bronze (21 Tables TaskGroup)
-    # ----------------------------------------------------
-    with TaskGroup("phase_0_oracle_to_bronze") as phase_0:
-        prev_task = None
-        for item in ORACLE_TRACK2_TABLES:
-            trg = item["target"]
-            t = BashOperator(
-                task_id=f"ingest_{trg}",
-                bash_command=f"python /opt/airflow/spark_jobs/landing/track2_loan_contract/oracle_to_bronze_track2.py {{{{ ds }}}} {trg}"
-            )
-            if prev_task:
-                prev_task >> t
-            prev_task = t
-
-    # ----------------------------------------------------
-    # PHASE 1: Build 6 Satellite Tables (Silver Satellite - Chạy tuần tự)
+    # PHASE 1: Build 6 Satellite Tables (Silver Satellite)
     # ----------------------------------------------------
     with TaskGroup("phase_1_silver_satellites") as phase_1:
         ar_bal = BashOperator(
@@ -92,7 +53,7 @@ with DAG(
         ar_bal >> ar_rate_hist >> ar_dlq_smy >> ou >> exg_rate >> ast_ar_int_smy
 
     # ----------------------------------------------------
-    # PHASE 2 & PHASE 3: Build LOAN_AR (Task 10) & LOAN_AR_PRFL (Task 11)
+    # PHASE 2 & 3: Build LOAN_AR (Task 10) & LOAN_AR_PRFL (Task 11)
     # ----------------------------------------------------
     with TaskGroup("phase_2_3_silver_temp2") as phase_2_3:
         loan_ar = BashOperator(
@@ -123,8 +84,5 @@ with DAG(
     )
 
     # Execution Graph
-    phase_0 >> phase_1
-    phase_0 >> phase_2_3
-    
     [phase_1, phase_2_3] >> intf_loan_ar_task9
     phase_2_3 >> dim_loan_ar_task12

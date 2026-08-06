@@ -1,7 +1,7 @@
 -- ====================================================================
 -- TASK 9: INTF_LOAN_AR (Interface Loan Arrangement - Technical Silver Temp1)
 -- Source: AR_BAL JOIN 7 Silver tables (LOAN_AR, LOAN_AR_PRFL, AR_RATE_HIST, AR_DLQ_SMY, EXG_RATE, OU, AST_AR_INT_SMY)
--- Target: demo.default.intf_loan_ar (Silver Temp1 Layer)
+-- Target: intf_loan_ar (Silver Temp1 Layer)
 -- ====================================================================
 
 SELECT 
@@ -54,11 +54,11 @@ SELECT
     '0'                                                 AS ODUE_PE_AMT,
     '0'                                                 AS ODUE_PS_AMT,
     current_timestamp()                                 AS SYS_UDT_DT
-FROM demo.default.ar_bal a
-JOIN demo.default.loan_ar b ON a.AR_ID = b.AR_ID
-JOIN demo.default.loan_ar_prfl c ON a.AR_ID = c.AR_ID
-JOIN demo.default.ar_rate_hist d ON a.AR_ID = d.AR_ID
-LEFT JOIN demo.default.ar_dlq_smy e ON a.AR_ID = e.AR_ID
+FROM ar_bal a
+JOIN loan_ar b ON a.AR_ID = b.AR_ID
+JOIN loan_ar_prfl c ON a.AR_ID = c.AR_ID
+JOIN ar_rate_hist d ON a.AR_ID = d.AR_ID
+LEFT JOIN ar_dlq_smy e ON a.AR_ID = e.AR_ID
 LEFT JOIN (
     SELECT ORIG_AR_ID,
            SUM(datediff(current_date(), PNP_PAST_DUE_DT)) + 1 AS SO_NGAY_QH_GOC,
@@ -66,17 +66,17 @@ LEFT JOIN (
            GREATEST(COALESCE(SUM(datediff(current_date(), PNP_PAST_DUE_DT)), 0),
                     COALESCE(SUM(datediff(current_date(), INT_PAST_DUE_DT)), 0)) + 1 AS SONGAY_QHAN_CAONHAT,
            SUM(COALESCE(ADDITION_DYS_IN_ARS, 0)) AS SNQH_CHUYENDOI
-    FROM demo.default.ar_dlq_smy 
+    FROM ar_dlq_smy 
     GROUP BY ORIG_AR_ID
 ) e1 ON e1.ORIG_AR_ID = a.AR_ID
-LEFT JOIN demo.default.exg_rate f ON b.CCY_CODE = f.FRST_CCY_CODE
-LEFT JOIN demo.default.ou i ON a.OU_CODE = i.OU_CODE
+LEFT JOIN exg_rate f ON b.CCY_CODE = f.FRST_CCY_CODE
+LEFT JOIN ou i ON a.OU_CODE = i.OU_CODE
 LEFT JOIN (
     SELECT ORIG_AR_ID,
            SUM(TOT_ACR_INT_AMT_FCY) AS TOT_ACR_INT_AMT_FCY,
            SUM(TOT_INT_PAID_AMT_FCY) AS TOT_INT_PAID_AMT_FCY,
            SUM(TOT_INT_DUE_AMT_FCY)  AS TOT_INT_DUE_AMT_FCY,
            SUM(TOT_INT_ODUE_AMT_FCY) AS TOT_INT_ODUE_AMT_FCY
-    FROM demo.default.ast_ar_int_smy 
+    FROM ast_ar_int_smy 
     GROUP BY ORIG_AR_ID
 ) k ON a.AR_ID = k.ORIG_AR_ID;

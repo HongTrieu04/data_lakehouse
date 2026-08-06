@@ -1,7 +1,7 @@
 -- ====================================================================
 -- SATELLITE 5: EXG_RATE / EXG_RATE_HIST (Exchange Rate - Latest / History)
 -- Source: bz_pg_t24core_currency UNION ALL bz_pg_t24core_currency_his
--- Target: demo.default.exg_rate (Silver Layer)
+-- Target: exg_rate (Silver Layer)
 -- ====================================================================
 
 WITH cur_live AS (
@@ -11,7 +11,7 @@ WITH cur_live AS (
         CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
         DATE_TIME                                       AS DATE_TIME_VAL,
         999999                                          AS CURR_NO
-    FROM demo.default.bz_pg_t24core_currency
+    FROM bz_pg_t24core_currency
 ),
 cur_his AS (
     SELECT 
@@ -20,7 +20,7 @@ cur_his AS (
         CAST(SPLIT(MID_REVAL_RATE, '#')[0] AS DECIMAL(18,6)) AS MID_RATE,
         DATE_TIME                                       AS DATE_TIME_VAL,
         CAST(CURR_NO AS INT)                            AS CURR_NO
-    FROM demo.default.bz_pg_t24core_currency_his
+    FROM bz_pg_t24core_currency_his
 ),
 cur_combined AS (
     SELECT * FROM cur_live

@@ -1,7 +1,7 @@
 -- ====================================================================
 -- TASK 12: DIM_LOAN_AR (Loan Arrangement Dimension Table - Gold / Data Mart Layer SCD2)
 -- Source: LOAN_AR LEFT JOIN LOAN_AR_PRFL
--- Target: demo.default.dim_loan_ar (Gold Layer)
+-- Target: dim_loan_ar (Gold Layer)
 -- ====================================================================
 
 SELECT 
@@ -24,5 +24,5 @@ SELECT
     current_date()                                      AS SYS_EFF_DT,
     TO_DATE('9999-12-31', 'yyyy-MM-dd')                 AS SYS_EXP_DT,
     current_timestamp()                                  AS SYS_UDT_DT
-FROM demo.default.loan_ar a
-LEFT JOIN demo.default.loan_ar_prfl b ON a.AR_ID = b.AR_ID;
+FROM loan_ar a
+LEFT JOIN loan_ar_prfl b ON a.AR_ID = b.AR_ID;

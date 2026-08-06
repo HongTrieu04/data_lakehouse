@@ -4,10 +4,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from spark_jobs.common.spark_session import get_spark
 from spark_jobs.common.io_utils import write_parquet, write_iceberg_table
+from spark_jobs.common.view_loader import load_all_bronze_views
 
 def run_ast_ar_int_smy(etl_date: str = "2026-08-06"):
     spark = get_spark("Silver_Satellite_AST_AR_INT_SMY")
     print(f"[PHASE 1] Building Satellite AST_AR_INT_SMY for ETL Date: {etl_date}")
+    
+    load_all_bronze_views(spark, etl_date)
     
     sql_path = "/opt/airflow/sql/silver_temp2/ast_ar_int_smy.sql"
     if not os.path.exists(sql_path):
@@ -21,9 +24,8 @@ def run_ast_ar_int_smy(etl_date: str = "2026-08-06"):
     target_path = f"s3a://silver/ast_ar_int_smy/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
     write_iceberg_table(df_result, "ast_ar_int_smy", mode="overwrite")
-    df_result.createOrReplaceTempView("ast_ar_int_smy")
     
-    print(f"[SILVER SATELLITE] Completed AST_AR_INT_SMY - {df_result.count()} records written")
+    print(f"[SILVER SATELLITE] Completed AST_AR_INT_SMY - Ingested successfully")
 
 if __name__ == "__main__":
     etl_dt = sys.argv[1] if len(sys.argv) > 1 else "2026-08-06"

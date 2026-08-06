@@ -4,10 +4,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from spark_jobs.common.spark_session import get_spark
 from spark_jobs.common.io_utils import write_parquet, write_iceberg_table
+from spark_jobs.common.view_loader import load_silver_view
 
 def run_intf_loan_ar(etl_date: str = "2026-08-06"):
     spark = get_spark("Silver_Temp1_INTF_LOAN_AR")
     print(f"[PHASE 4 - TASK 9] Building Silver Temp 1 INTF_LOAN_AR for ETL Date: {etl_date}")
+    
+    # Load 8 Silver input views
+    silver_tables = ["ar_bal", "loan_ar", "loan_ar_prfl", "ar_rate_hist", "ar_dlq_smy", "exg_rate", "ou", "ast_ar_int_smy"]
+    for tbl in silver_tables:
+        load_silver_view(spark, tbl, etl_date)
     
     sql_path = "/opt/airflow/sql/silver_temp1/intf_loan_ar.sql"
     if not os.path.exists(sql_path):
@@ -22,7 +28,7 @@ def run_intf_loan_ar(etl_date: str = "2026-08-06"):
     write_parquet(df_result, target_path, mode="overwrite")
     write_iceberg_table(df_result, "intf_loan_ar", mode="overwrite")
     
-    print(f"[SILVER TEMP1] Completed INTF_LOAN_AR (Task 9) - {df_result.count()} records written")
+    print(f"[SILVER TEMP1] Completed INTF_LOAN_AR (Task 9) - Ingested successfully")
 
 if __name__ == "__main__":
     etl_dt = sys.argv[1] if len(sys.argv) > 1 else "2026-08-06"
