@@ -1,0 +1,25 @@
+{
+  "tableName": "dim_loan_ar",
+  "layer": "gold",
+  "fields": [
+    {"name": "DIM_KEY", "type": "string", "nullable": false},
+    {"name": "AR_ID", "type": "string", "nullable": false},
+    {"name": "AR_CODE", "type": "string", "nullable": true},
+    {"name": "FCC_AR_CODE", "type": "string", "nullable": true},
+    {"name": "PPR_CTR_NBR", "type": "string", "nullable": true},
+    {"name": "PD_CGY_CODE", "type": "string", "nullable": true},
+    {"name": "AR_PPS_GRP_CODE", "type": "string", "nullable": true},
+    {"name": "AR_PPS_TP_CODE", "type": "string", "nullable": true},
+    {"name": "ORIG_AMT_FCY", "type": "decimal(18,2)", "nullable": true},
+    {"name": "TERM_CODE", "type": "string", "nullable": true},
+    {"name": "VAL_DT", "type": "date", "nullable": true},
+    {"name": "EFF_DT", "type": "date", "nullable": true},
+    {"name": "MAT_DT", "type": "date", "nullable": true},
+    {"name": "AR_LCS_TP_CODE", "type": "string", "nullable": true},
+    {"name": "PROM_CODE", "type": "string", "nullable": true},
+    {"name": "PROM_CODE_2", "type": "string", "nullable": true},
+    {"name": "SYS_EFF_DT", "type": "date", "nullable": true},
+    {"name": "SYS_EXP_DT", "type": "date", "nullable": true},
+    {"name": "SYS_UDT_DT", "type": "timestamp", "nullable": true}
+  ]
+}

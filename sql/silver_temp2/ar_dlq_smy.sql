@@ -1,21 +1,35 @@
--- Task 36: AR_DLQ_SMY (Arrangement Delinquency Summary)
--- Layer: Silver Temp 2 (Bank-wised Business Logic)
+-- ====================================================================
+-- SATELLITE 3: AR_DLQ_SMY (Arrangement Delinquency Summary - Snapshot Daily)
+-- Source: bz_t24core_pd_payment_due_his_mv LEFT JOIN bz_t24core_pd_payment_due
+-- Target: demo.default.ar_dlq_smy (Silver Layer)
+-- ====================================================================
 
-CREATE OR REPLACE TABLE demo.default.ar_dlq_smy AS
+WITH filtered_pd AS (
+    SELECT a.*, b.SNQH_CHUYENDOI
+    FROM demo.default.bz_t24core_pd_payment_due_his_mv a
+    LEFT JOIN demo.default.bz_t24core_pd_payment_due b ON a.RECID = b.RECID
+    WHERE a.FLAG_STATUS = 'LIVE'
+      AND a.PAY_TYPE IN ('PR', 'IN')
+      AND COALESCE(CAST(a.PD_TYPE AS INT), 0) <> 1
+      AND (a.RECORD_STATUS IS NULL OR a.RECORD_STATUS <> 'REVE')
+      AND CAST(a.PAY_AMT_OUTS AS DECIMAL(18,2)) > 0
+)
 SELECT 
-    hash("T24_LD_LOANS_AND_DEPOSITS", SUBSTRING(a.RECID, 1, 14))   AS AR_ID,
-    SUBSTRING(a.RECID, 1, 14)                                       AS AR_CODE,
-    hash("T24_LD_LOANS_AND_DEPOSITS", 
-         CASE WHEN a.RECID LIKE 'PDLD%' THEN SUBSTRING(a.RECID, 3, 12) 
-              ELSE SUBSTRING(a.RECID, 1, 14) END)                  AS ORIG_AR_ID,
-    MIN(CASE WHEN a.PAY_TYPE = 'PR' AND a.CATEGORY <> 21069 
-             THEN TO_DATE(a.PAYMENT_DTE_DUE, 'yyyyMMdd') END)       AS PNP_PAST_DUE_DT,
-    MIN(CASE WHEN a.PAY_TYPE = 'IN' OR (a.CATEGORY = 21069 AND a.PAY_TYPE = 'PR') 
-             THEN TO_DATE(a.PAYMENT_DTE_DUE, 'yyyyMMdd') END)       AS INT_PAST_DUE_DT,
-    MAX(b.SNQH_CHUYENDOI)                                          AS ADDITION_DYS_IN_ARS
-FROM demo.default.bz_t24_pd_payment_due_his_mv a
-LEFT JOIN demo.default.bz_t24_pd_payment_due b ON a.RECID = b.RECID
-WHERE a.flag_status = 'LIVE'
-  AND a.PAY_TYPE IN ('PR', 'IN')
-  AND a.PAY_AMT_OUTS > 0
-GROUP BY SUBSTRING(a.RECID, 1, 14), a.RECID;
+    sha256(concat('T24_LD_LOANS_AND_DEPOSITS', SUBSTRING(RECID, 1, 14))) AS AR_ID,
+    SUBSTRING(RECID, 1, 14)                                             AS AR_CODE,
+    sha256(concat('T24_LD_LOANS_AND_DEPOSITS', 
+           CASE WHEN RECID LIKE 'PDLD%' THEN SUBSTRING(RECID, 3, 12) 
+                ELSE SUBSTRING(RECID, 1, 14) END))                     AS ORIG_AR_ID,
+    MIN(CASE WHEN PAY_TYPE = 'PR' AND CATEGORY <> '21069' 
+             THEN TO_DATE(PAYMENT_DTE_DUE, 'yyyyMMdd') END)             AS PNP_PAST_DUE_DT,
+    MIN(CASE WHEN PAY_TYPE = 'IN' OR (CATEGORY = '21069' AND PAY_TYPE = 'PR') 
+             THEN TO_DATE(PAYMENT_DTE_DUE, 'yyyyMMdd') END)             AS INT_PAST_DUE_DT,
+    MIN(CASE WHEN PAY_TYPE = 'PR' AND CATEGORY <> '21069' 
+             THEN CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)             AS PNP_ARS,
+    MIN(CASE WHEN PAY_TYPE = 'IN' OR (CATEGORY = '21069' AND PAY_TYPE = 'PR') 
+             THEN CAST(PAY_AMT_OUTS AS DECIMAL(18,2)) END)             AS INT_ARS,
+    MAX(CAST(SNQH_CHUYENDOI AS INT))                                    AS ADDITION_DYS_IN_ARS,
+    current_timestamp()                                                 AS SYS_UDT_DT
+FROM filtered_pd
+GROUP BY SUBSTRING(RECID, 1, 14), 
+         CASE WHEN RECID LIKE 'PDLD%' THEN SUBSTRING(RECID, 3, 12) ELSE SUBSTRING(RECID, 1, 14) END;

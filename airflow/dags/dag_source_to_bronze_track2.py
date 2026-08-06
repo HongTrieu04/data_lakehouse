@@ -17,10 +17,11 @@ with DAG(
     description='Oracle Source to Bronze Extraction for Track 2 Loan Contract Domain (21 Tables)',
     schedule='0 2 * * *',  # Run daily at 02:00 AM
     catchup=False,
+    max_active_tasks=2,    # Giới hạn tối đa 2 task Spark chạy đồng thời để bảo vệ RAM/CPU
     tags=['oracle', 'bronze', 'track2', 'loan_contract', 'fresher2'],
 ) as dag:
 
-    # TaskGroup A: Extract Core Loan Contract Source Tables (14 Tables)
+    # TaskGroup A: Extract Core Loan Contract Source Tables (14 Tables - Chạy tuần tự)
     with TaskGroup("extract_oracle_group_a_core_tables") as group_a:
         tables_group_a = [
             "bz_t24core_ld_loans_and_deposits",
@@ -39,13 +40,17 @@ with DAG(
             "bz_source_saoke_mvmt",
         ]
 
+        prev_task = None
         for tbl in tables_group_a:
-            BashOperator(
+            curr_task = BashOperator(
                 task_id=f"ingest_{tbl}",
                 bash_command=f"python /opt/airflow/spark_jobs/landing/track2_loan_contract/oracle_to_bronze_track2.py {{{{ ds }}}} {tbl}"
             )
+            if prev_task:
+                prev_task >> curr_task
+            prev_task = curr_task
 
-    # TaskGroup B: Extract Satellite Source Tables (7 Tables)
+    # TaskGroup B: Extract Satellite Source Tables (7 Tables - Chạy tuần tự)
     with TaskGroup("extract_oracle_group_b_satellites") as group_b:
         tables_group_b = [
             "bz_source_saoke_crb",
@@ -57,8 +62,15 @@ with DAG(
             "bz_pg_t24core_currency_his",
         ]
 
+        prev_task = None
         for tbl in tables_group_b:
-            BashOperator(
+            curr_task = BashOperator(
                 task_id=f"ingest_{tbl}",
                 bash_command=f"python /opt/airflow/spark_jobs/landing/track2_loan_contract/oracle_to_bronze_track2.py {{{{ ds }}}} {tbl}"
             )
+            if prev_task:
+                prev_task >> curr_task
+            prev_task = curr_task
+
+    # Chạy tuần tự: Group A xong toàn bộ mới sang Group B
+    group_a >> group_b

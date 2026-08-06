@@ -17,6 +17,7 @@ with DAG(
     description='Standalone Pipeline for Track 2 Loan Contract Domain (Tasks 9-12)',
     schedule='0 3 * * *',
     catchup=False,
+    max_active_tasks=2,    # Giới hạn tối đa 2 task Spark chạy đồng thời để bảo vệ RAM/CPU
     tags=['track2', 'loan_contract', 'fresher2'],
 ) as dag:
 
@@ -29,7 +30,7 @@ with DAG(
     )
 
     # ----------------------------------------------------
-    # PHASE 1: Build 6 Satellite Tables (Silver Satellite)
+    # PHASE 1: Build 6 Satellite Tables (Silver Satellite - Chạy tuần tự)
     # ----------------------------------------------------
     with TaskGroup("phase_1_silver_satellites") as phase_1:
         ar_bal = BashOperator(
@@ -57,6 +58,9 @@ with DAG(
             bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ast_ar_int_smy.py {{ ds }}"
         )
 
+        # Chuỗi liên kết tuần tự để tránh tràn RAM/CPU
+        ar_bal >> ar_rate_hist >> ar_dlq_smy >> ou >> exg_rate >> ast_ar_int_smy
+
     # ----------------------------------------------------
     # PHASE 2 & PHASE 3: Build LOAN_AR (Task 10) & LOAN_AR_PRFL (Task 11)
     # ----------------------------------------------------
@@ -69,6 +73,8 @@ with DAG(
             task_id="build_loan_ar_prfl_task11",
             bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp2_business/loan_ar_prfl.py {{ ds }}"
         )
+
+        loan_ar >> loan_ar_prfl
 
     # ----------------------------------------------------
     # PHASE 4: Build INTF_LOAN_AR (Task 9 - Interface Table)
