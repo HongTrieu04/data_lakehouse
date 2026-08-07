@@ -1,5 +1,4 @@
 import os
-from pyspark.sql.functions import lit
 from spark_jobs.common.io_utils import read_parquet
 
 BRONZE_TABLE_SCHEMAS = {
