@@ -25,23 +25,55 @@ BRONZE_TABLE_SCHEMAS = {
     "bz_pg_t24core_currency_his": "ID string, MID_REVAL_RATE string, DATE_TIME string, CURR_NO string, BRZ_LOAD_DT timestamp, SRC_SYSTEM string, ETL_BATCH_ID string",
 }
 
+BRONZE_SCHEMA_MAP = {
+    "bz_t24core_ld_loans_and_deposits": "PG_T24CORE",
+    "bz_t24core_ld_loans_and_deposits_his": "PG_T24CORE",
+    "bz_flexbo_pgb_ldtb_contract_master": "PG_FLEXBO",
+    "bz_flexbo_pgb_los_contract_fields_tdate": "PG_FLEXBO",
+    "bz_los_app_loan_disbursement": "PG_LOS",
+    "bz_los_app_facility": "PG_LOS",
+    "bz_los_app_product": "PG_LOS",
+    "bz_t24core_customer": "PG_T24CORE",
+    "bz_ebanking_col_udf_value": "PG_EBANKING",
+    "bz_flexbo_pgb_contract_udf_map": "PG_FLEXBO",
+    "bz_flexbo_pgbld_contract_udfield_hist": "PG_FLEXBO",
+    "bz_t24core_mb_mg_saving_multi": "PG_T24CORE",
+    "bz_flexbo_pgbld_rt_contract_udfield_hist": "PG_FLEXBO",
+    "bz_source_saoke_mvmt": "PG_SAOKE",
+    "bz_source_saoke_crb": "PG_SAOKE",
+    "bz_t24core_stmt_entry": "PG_T24CORE",
+    "bz_t24core_pd_payment_due_his_mv": "PG_T24CORE",
+    "bz_t24core_pd_payment_due": "PG_T24CORE",
+    "bz_t24core_company": "PG_T24CORE",
+    "bz_pg_t24core_currency": "PG_T24CORE",
+    "bz_pg_t24core_currency_his": "PG_T24CORE",
+}
+
 def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
-    """Loads all ingested Bronze Parquet tables into temporary views for Spark SQL queries."""
+    """Loads all ingested Bronze Iceberg tables into temporary views for Spark SQL queries."""
     for trg, schema_str in BRONZE_TABLE_SCHEMAS.items():
-        path = f"s3a://bronze/{trg}/{etl_date}/"
+        schema_name = BRONZE_SCHEMA_MAP.get(trg, "PG_T24CORE")
+        iceberg_path = f"s3a://bronze/{schema_name}/{trg.upper()}/data/"
+        legacy_path = f"s3a://bronze/{trg}/{etl_date}/"
         try:
-            df = read_parquet(spark, path)
+            try:
+                df = read_parquet(spark, iceberg_path)
+            except Exception:
+                df = read_parquet(spark, legacy_path)
             df.createOrReplaceTempView(trg)
         except Exception:
-            # Fallback for empty/missing Parquet directories to prevent UnresolvedRelation errors
             df_empty = spark.createDataFrame([], schema_str)
             df_empty.createOrReplaceTempView(trg)
 
 def load_silver_view(spark, table_name: str, etl_date: str = "2026-08-06"):
-    """Loads a Silver layer output Parquet into temporary views for downstream SQL queries."""
-    path = f"s3a://silver/{table_name}/{etl_date}/"
+    """Loads a Silver layer output Iceberg table into temporary views for downstream SQL queries."""
+    iceberg_path = f"s3a://silver/{table_name.upper()}/data/"
+    legacy_path = f"s3a://silver/{table_name.lower()}/{etl_date}/"
     try:
-        df = read_parquet(spark, path)
+        try:
+            df = read_parquet(spark, iceberg_path)
+        except Exception:
+            df = read_parquet(spark, legacy_path)
         df.createOrReplaceTempView(table_name)
     except Exception as e:
         print(f"[WARN] Silver view registration skipped for {table_name}: {str(e)}")

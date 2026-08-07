@@ -5,8 +5,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../.
 
 from spark_jobs.common.spark_session import get_spark
 from spark_jobs.common.oracle_utils import read_oracle_table
-from spark_jobs.common.io_utils import write_parquet
+from spark_jobs.common.io_utils import write_parquet, write_iceberg_table
 from pyspark.sql import functions as F
+
+SCHEMA_FOLDER_MAP = {
+    "PG_T24CORE": "PG_T24CORE",
+    "PG_FLEXBO": "PG_FLEXBO",
+    "PG_LOS_APP": "PG_LOS",
+    "PG_EBANKING": "PG_EBANKING",
+    "PG_SOURCE": "PG_SAOKE"
+}
 
 # 21 Oracle Source Tables mapping definition for Track 2 (Tasks 9-12)
 ORACLE_TRACK2_TABLES = [
@@ -48,6 +56,7 @@ def ingest_oracle_to_bronze(etl_date: str = "2026-08-06", target_table: str = No
         src_table = f"{item['schema']}.{item['table']}"
         trg_table = item["target"]
         filter_col = item["filter_col"]
+        schema_folder = SCHEMA_FOLDER_MAP.get(item["schema"], "PG_T24CORE")
         
         print(f"[ORACLE -> BRONZE] Reading Oracle table: {src_table}")
         try:
@@ -60,11 +69,17 @@ def ingest_oracle_to_bronze(etl_date: str = "2026-08-06", target_table: str = No
                 .withColumn("SRC_SYSTEM", F.lit(item["schema"])) \
                 .withColumn("ETL_BATCH_ID", F.lit(etl_date))
 
-            # Save to MinIO Bronze bucket as raw Parquet
+            # Save to MinIO Bronze bucket as Iceberg with Incremental Append
+            write_iceberg_table(df_bronze, bucket="bronze", schema_name=schema_folder, table_name=trg_table, mode="append")
+
+            # Also maintain legacy parquet path for backwards compatibility
             target_path = f"s3a://bronze/{trg_table}/{etl_date}/"
             write_parquet(df_bronze, target_path, mode="overwrite")
 
-            print(f"[SUCCESS] Successfully ingested {src_table} -> {trg_table}")
+            print(f"[SUCCESS] Successfully ingested {src_table} -> Iceberg bronze/{schema_folder}/{trg_table.upper()}")
+        except Exception as e:
+            print(f"[ERROR] Failed to ingest {src_table}: {str(e)}")
+            raise e
         except Exception as e:
             print(f"[ERROR] Failed to ingest {src_table}: {str(e)}")
             raise e

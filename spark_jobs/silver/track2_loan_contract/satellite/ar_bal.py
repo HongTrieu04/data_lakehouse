@@ -24,7 +24,7 @@ def run_ar_bal(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://silver/ar_bal/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "ar_bal", mode="overwrite")
+    write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="AR_BAL", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed AR_BAL - Ingested successfully")
 

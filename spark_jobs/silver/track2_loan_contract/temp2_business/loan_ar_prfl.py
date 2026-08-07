@@ -23,7 +23,7 @@ def run_loan_ar_prfl(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://silver/loan_ar_prfl/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "loan_ar_prfl", mode="overwrite")
+    write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="LOAN_AR_PRFL", mode="overwrite")
     
     print(f"[SILVER TEMP2] Completed LOAN_AR_PRFL (Task 11) - Ingested successfully")
 

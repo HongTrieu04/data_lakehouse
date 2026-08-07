@@ -23,7 +23,7 @@ def run_ar_rate_hist(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://silver/ar_rate_hist/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "ar_rate_hist", mode="overwrite")
+    write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="AR_RATE_HIST", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed AR_RATE_HIST - Ingested successfully")
 

@@ -23,7 +23,7 @@ def run_ou(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://silver/ou/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "ou", mode="overwrite")
+    write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="OU", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed OU - Ingested successfully")
 

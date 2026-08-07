@@ -23,7 +23,7 @@ def run_ar_dlq_smy(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://silver/ar_dlq_smy/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "ar_dlq_smy", mode="overwrite")
+    write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="AR_DLQ_SMY", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed AR_DLQ_SMY - Ingested successfully")
 

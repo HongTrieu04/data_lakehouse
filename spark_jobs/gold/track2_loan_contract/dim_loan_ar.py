@@ -25,7 +25,7 @@ def run_dim_loan_ar(etl_date: str = "2026-08-06"):
     
     target_path = f"s3a://gold/dim_loan_ar/{etl_date}/"
     write_parquet(df_result, target_path, mode="overwrite")
-    write_iceberg_table(df_result, "dim_loan_ar", mode="overwrite")
+    write_iceberg_table(df_result, bucket="gold", schema_name=None, table_name="DIM_LOAN_AR", mode="overwrite")
     
     print(f"[GOLD] Completed DIM_LOAN_AR (Task 12) - Ingested successfully")
 

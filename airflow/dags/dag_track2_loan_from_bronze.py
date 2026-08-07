@@ -27,27 +27,27 @@ with DAG(
     with TaskGroup("phase_1_silver_satellites") as phase_1:
         ar_bal = BashOperator(
             task_id="build_ar_bal",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_bal.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_bal.py {{ ds | default('2026-08-07') }}"
         )
         ar_rate_hist = BashOperator(
             task_id="build_ar_rate_hist",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_rate_hist.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_rate_hist.py {{ ds | default('2026-08-07') }}"
         )
         ar_dlq_smy = BashOperator(
             task_id="build_ar_dlq_smy",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_dlq_smy.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ar_dlq_smy.py {{ ds | default('2026-08-07') }}"
         )
         ou = BashOperator(
             task_id="build_ou",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ou.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ou.py {{ ds | default('2026-08-07') }}"
         )
         exg_rate = BashOperator(
             task_id="build_exg_rate",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/exg_rate.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/exg_rate.py {{ ds | default('2026-08-07') }}"
         )
         ast_ar_int_smy = BashOperator(
             task_id="build_ast_ar_int_smy",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ast_ar_int_smy.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/satellite/ast_ar_int_smy.py {{ ds | default('2026-08-07') }}"
         )
 
         ar_bal >> ar_rate_hist >> ar_dlq_smy >> ou >> exg_rate >> ast_ar_int_smy
@@ -58,11 +58,11 @@ with DAG(
     with TaskGroup("phase_2_3_silver_temp2") as phase_2_3:
         loan_ar = BashOperator(
             task_id="build_loan_ar_task10",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp2_business/loan_ar.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp2_business/loan_ar.py {{ ds | default('2026-08-07') }}"
         )
         loan_ar_prfl = BashOperator(
             task_id="build_loan_ar_prfl_task11",
-            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp2_business/loan_ar_prfl.py {{ ds }}"
+            bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp2_business/loan_ar_prfl.py {{ ds | default('2026-08-07') }}"
         )
 
         loan_ar >> loan_ar_prfl
@@ -72,7 +72,7 @@ with DAG(
     # ----------------------------------------------------
     intf_loan_ar_task9 = BashOperator(
         task_id="build_intf_loan_ar_task9",
-        bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp1_technical/intf_loan_ar.py {{ ds }}"
+        bash_command="python /opt/airflow/spark_jobs/silver/track2_loan_contract/temp1_technical/intf_loan_ar.py {{ ds | default('2026-08-07') }}"
     )
 
     # ----------------------------------------------------
@@ -80,7 +80,7 @@ with DAG(
     # ----------------------------------------------------
     dim_loan_ar_task12 = BashOperator(
         task_id="build_dim_loan_ar_task12",
-        bash_command="python /opt/airflow/spark_jobs/gold/track2_loan_contract/dim_loan_ar.py {{ ds }}"
+        bash_command="python /opt/airflow/spark_jobs/gold/track2_loan_contract/dim_loan_ar.py {{ ds | default('2026-08-07') }}"
     )
 
     # Execution Graph
