@@ -3,6 +3,8 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.utils.task_group import TaskGroup
 
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
 default_args = {
     'owner': 'fresher_2',
     'depends_on_past': False,
@@ -83,6 +85,17 @@ with DAG(
         bash_command="python /opt/airflow/spark_jobs/gold/track2_loan_contract/dim_loan_ar.py {{ ds | default('2026-08-07') }}"
     )
 
+    # ----------------------------------------------------
+    # PHASE 6: Trigger Data Reconciliation DAG
+    # ----------------------------------------------------
+    trigger_recon = TriggerDagRunOperator(
+        task_id="trigger_dag_recon_track2",
+        trigger_dag_id="dag_recon_track2",
+        reset_dag_run=True,
+        wait_for_completion=False
+    )
+
     # Execution Graph
     [phase_1, phase_2_3] >> intf_loan_ar_task9
     phase_2_3 >> dim_loan_ar_task12
+    [intf_loan_ar_task9, dim_loan_ar_task12] >> trigger_recon

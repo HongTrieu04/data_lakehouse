@@ -35,7 +35,7 @@ ORACLE_TRACK2_TABLES = [
     {"schema": "PG_SOURCE", "table": "SAOKE_MVMT", "target": "bz_source_saoke_mvmt", "filter_col": None},
 
     # Group B: Tables for 6 Satellite tables (7 tables)
-    {"schema": "PG_SOURCE", "table": "SAOKE_CRB", "target": "bz_source_saoke_crb", "filter_col": "TXN_DATE"},
+    {"schema": "PG_SOURCE", "table": "SAOKE_CRB", "target": "bz_source_saoke_crb", "filter_col": None},
     {"schema": "PG_T24CORE", "table": "STMT_ENTRY", "target": "bz_t24core_stmt_entry", "filter_col": "BOOKING_DATE"},
     {"schema": "PG_T24CORE", "table": "PD_PAYMENT_DUE_HIS_MV", "target": "bz_t24core_pd_payment_due_his_mv", "filter_col": None},
     {"schema": "PG_T24CORE", "table": "PD_PAYMENT_DUE", "target": "bz_t24core_pd_payment_due", "filter_col": None},

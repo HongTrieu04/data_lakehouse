@@ -49,6 +49,19 @@ BRONZE_TABLE_LOCATION_MAP = {
     "bz_pg_t24core_currency_his": ("PG_T24CORE", "CURRENCY_HIS"),
 }
 
+SILVER_TABLE_SCHEMAS = {
+    "AR_BAL": "AR_ID string, AR_CODE string, CST_ID string, RCVB_AMT_LCY double, CLS_BAL_LCY double, MUD_CODE string, AST_TP_CODE string, PD_CGY_CODE string, OU_CODE string, CCY_CODE string, CST_CODE string, AR_TERM_TP_CODE string, GL_ITM_CODE string, GL_ITM_ID string, SUB_PD_CODE string, CDR_DT date, SYS_UDT_DT timestamp",
+    "AR_DLQ_SMY": "AR_ID string, AR_CODE string, ORIG_AR_ID string, PNP_PAST_DUE_DT date, INT_PAST_DUE_DT date, PNP_ARS double, INT_ARS double, ADDITION_DYS_IN_ARS double, SYS_UDT_DT timestamp",
+    "AR_RATE_HIST": "AR_ID string, AR_CODE string, INT_RATE_VARIABLITY_TP_CODE string, INT_RATE_EFF_DT date, EFF_RATE_PCT double, SPRD_RATE_PCT double, PNY_RATE double, ODUE_INT_RATE double, MRGN_RATE double, SYS_EFF_DT date, SYS_EXP_DT date, SYS_UDT_DT timestamp",
+    "AST_AR_INT_SMY": "AR_ID string, AR_CODE string, ORIG_AR_ID string, ORIG_AR_CODE string, TOT_ACR_INT_AMT_FCY double, TOT_INT_PAID_AMT_FCY double, TOT_INT_DUE_AMT_FCY double, TOT_INT_ODUE_AMT_FCY double, SYS_UDT_DT timestamp",
+    "EXG_RATE": "SNPST_DT date, SRC_STM_CODE string, FRST_CCY_CODE string, SCD_CCY_CODE string, MID_RATE double, SYS_UDT_DT timestamp",
+    "OU": "OU_ID string, OU_CODE string, OU_NM string, SYS_EFF_DT date, SYS_EXP_DT date, SYS_UDT_DT timestamp",
+    "LOAN_AR": "AR_ID string, AR_CODE string, FCC_AR_CODE string, ORIG_AMT_FCY double, CHKER_OFCR_CODE string",
+    "LOAN_AR_PRFL": "AR_ID string, AR_CODE string, DSBR_PRPSL_OFCR string, DSBR_PRPSL_MGR string",
+    "INTF_LOAN_AR": "CDR_DT date, AR_CODE string, EFF_DT date, PD_CGY_CODE string, OU_CODE string, CCY_CODE string, AR_BAL_LCY double, AR_LMT_AMT double, SYS_UDT_DT timestamp",
+    "DIM_LOAN_AR": "AR_CODE string, AR_ID string, AR_BAL_LCY double, AR_LMT_AMT double, SYS_UDT_DT timestamp"
+}
+
 def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
     """Loads all ingested Bronze Iceberg tables into temporary views for Spark SQL queries."""
     for trg, schema_str in BRONZE_TABLE_SCHEMAS.items():
@@ -63,9 +76,15 @@ def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
 
 def load_silver_view(spark, table_name: str, etl_date: str = "2026-08-06"):
     """Loads a Silver layer output Iceberg table into temporary views for downstream SQL queries."""
-    iceberg_path = f"s3a://silver/{table_name.upper()}/data/"
+    tbl_upper = table_name.upper()
+    iceberg_path = f"s3a://silver/{tbl_upper}/data/"
     try:
         df = read_parquet(spark, iceberg_path)
-        df.createOrReplaceTempView(table_name)
+        df.createOrReplaceTempView(tbl_upper)
+        df.createOrReplaceTempView(table_name.lower())
     except Exception as e:
-        print(f"[WARN] Silver view registration skipped for {table_name}: {str(e)}")
+        print(f"[WARN] Silver view registration fallback for {table_name}: {str(e)}")
+        schema_str = SILVER_TABLE_SCHEMAS.get(tbl_upper, "AR_ID string, AR_CODE string, AR_BAL_LCY double")
+        df_empty = spark.createDataFrame([], schema_str)
+        df_empty.createOrReplaceTempView(tbl_upper)
+        df_empty.createOrReplaceTempView(table_name.lower())

@@ -20,7 +20,7 @@ SELECT
     SBV_CODE                                               AS GL_ITM_CODE,
     SBV_CODE                                               AS GL_ITM_ID,
     SUB_PRO                                                AS SUB_PD_CODE,
-    TO_DATE(TXN_DATE, 'yyyyMMdd')                          AS CDR_DT,
+    COALESCE(TO_DATE(TXN_DATE, 'yyyyMMdd'), TO_DATE(TXN_DATE)) AS CDR_DT,
     current_timestamp()                                    AS SYS_UDT_DT
 FROM bz_source_saoke_crb
 WHERE APP_CODE IN ('LD', 'PD');
