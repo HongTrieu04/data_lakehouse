@@ -72,10 +72,6 @@ def ingest_oracle_to_bronze(etl_date: str = "2026-08-06", target_table: str = No
             # Save to MinIO Bronze bucket as Iceberg with Incremental Append
             write_iceberg_table(df_bronze, bucket="bronze", schema_name=schema_folder, table_name=trg_table, mode="append")
 
-            # Also maintain legacy parquet path for backwards compatibility
-            target_path = f"s3a://bronze/{trg_table}/{etl_date}/"
-            write_parquet(df_bronze, target_path, mode="overwrite")
-
             print(f"[SUCCESS] Successfully ingested {src_table} -> Iceberg bronze/{schema_folder}/{trg_table.upper()}")
         except Exception as e:
             print(f"[ERROR] Failed to ingest {src_table}: {str(e)}")

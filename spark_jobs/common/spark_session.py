@@ -54,7 +54,8 @@ class SparkSessionManager:
                 .config("spark.hadoop.fs.s3a.connection.timeout", "60000") \
                 .config("spark.hadoop.fs.s3a.connection.establish.timeout", "60000") \
                 .config("spark.hadoop.fs.s3a.threads.keepalivetime", "60") \
-                .config("spark.hadoop.fs.s3a.multipart.purge.age", "86400")
+                .config("spark.hadoop.fs.s3a.multipart.purge.age", "86400") \
+                .config("spark.sql.autoBroadcastJoinThreshold", "-1")
 
             cls._instance = builder.getOrCreate()
         return cls._instance

@@ -21,8 +21,6 @@ def run_ast_ar_int_smy(etl_date: str = "2026-08-06"):
 
     df_result = spark.sql(query)
     
-    target_path = f"s3a://silver/ast_ar_int_smy/{etl_date}/"
-    write_parquet(df_result, target_path, mode="overwrite")
     write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="AST_AR_INT_SMY", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed AST_AR_INT_SMY - Ingested successfully")

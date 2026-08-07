@@ -21,8 +21,6 @@ def run_exg_rate(etl_date: str = "2026-08-06"):
 
     df_result = spark.sql(query)
     
-    target_path = f"s3a://silver/exg_rate/{etl_date}/"
-    write_parquet(df_result, target_path, mode="overwrite")
     write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="EXG_RATE", mode="overwrite")
     
     print(f"[SILVER SATELLITE] Completed EXG_RATE - Ingested successfully")

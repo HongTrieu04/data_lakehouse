@@ -54,12 +54,8 @@ def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
     for trg, schema_str in BRONZE_TABLE_SCHEMAS.items():
         schema_name = BRONZE_SCHEMA_MAP.get(trg, "PG_T24CORE")
         iceberg_path = f"s3a://bronze/{schema_name}/{trg.upper()}/data/"
-        legacy_path = f"s3a://bronze/{trg}/{etl_date}/"
         try:
-            try:
-                df = read_parquet(spark, iceberg_path)
-            except Exception:
-                df = read_parquet(spark, legacy_path)
+            df = read_parquet(spark, iceberg_path)
             df.createOrReplaceTempView(trg)
         except Exception:
             df_empty = spark.createDataFrame([], schema_str)
@@ -68,12 +64,8 @@ def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
 def load_silver_view(spark, table_name: str, etl_date: str = "2026-08-06"):
     """Loads a Silver layer output Iceberg table into temporary views for downstream SQL queries."""
     iceberg_path = f"s3a://silver/{table_name.upper()}/data/"
-    legacy_path = f"s3a://silver/{table_name.lower()}/{etl_date}/"
     try:
-        try:
-            df = read_parquet(spark, iceberg_path)
-        except Exception:
-            df = read_parquet(spark, legacy_path)
+        df = read_parquet(spark, iceberg_path)
         df.createOrReplaceTempView(table_name)
     except Exception as e:
         print(f"[WARN] Silver view registration skipped for {table_name}: {str(e)}")

@@ -21,8 +21,6 @@ def run_loan_ar(etl_date: str = "2026-08-06"):
 
     df_result = spark.sql(query)
     
-    target_path = f"s3a://silver/loan_ar/{etl_date}/"
-    write_parquet(df_result, target_path, mode="overwrite")
     write_iceberg_table(df_result, bucket="silver", schema_name=None, table_name="LOAN_AR", mode="overwrite")
     
     print(f"[SILVER TEMP2] Completed LOAN_AR (Task 10) - Ingested successfully")
