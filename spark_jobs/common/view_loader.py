@@ -25,35 +25,35 @@ BRONZE_TABLE_SCHEMAS = {
     "bz_pg_t24core_currency_his": "ID string, MID_REVAL_RATE string, DATE_TIME string, CURR_NO string, BRZ_LOAD_DT timestamp, SRC_SYSTEM string, ETL_BATCH_ID string",
 }
 
-BRONZE_SCHEMA_MAP = {
-    "bz_t24core_ld_loans_and_deposits": "PG_T24CORE",
-    "bz_t24core_ld_loans_and_deposits_his": "PG_T24CORE",
-    "bz_flexbo_pgb_ldtb_contract_master": "PG_FLEXBO",
-    "bz_flexbo_pgb_los_contract_fields_tdate": "PG_FLEXBO",
-    "bz_los_app_loan_disbursement": "PG_LOS",
-    "bz_los_app_facility": "PG_LOS",
-    "bz_los_app_product": "PG_LOS",
-    "bz_t24core_customer": "PG_T24CORE",
-    "bz_ebanking_col_udf_value": "PG_EBANKING",
-    "bz_flexbo_pgb_contract_udf_map": "PG_FLEXBO",
-    "bz_flexbo_pgbld_contract_udfield_hist": "PG_FLEXBO",
-    "bz_t24core_mb_mg_saving_multi": "PG_T24CORE",
-    "bz_flexbo_pgbld_rt_contract_udfield_hist": "PG_FLEXBO",
-    "bz_source_saoke_mvmt": "PG_SAOKE",
-    "bz_source_saoke_crb": "PG_SAOKE",
-    "bz_t24core_stmt_entry": "PG_T24CORE",
-    "bz_t24core_pd_payment_due_his_mv": "PG_T24CORE",
-    "bz_t24core_pd_payment_due": "PG_T24CORE",
-    "bz_t24core_company": "PG_T24CORE",
-    "bz_pg_t24core_currency": "PG_T24CORE",
-    "bz_pg_t24core_currency_his": "PG_T24CORE",
+BRONZE_TABLE_LOCATION_MAP = {
+    "bz_t24core_ld_loans_and_deposits": ("PG_T24CORE", "LD_LOANS_AND_DEPOSITS"),
+    "bz_t24core_ld_loans_and_deposits_his": ("PG_T24CORE", "LD_LOANS_AND_DEPOSITS_HIS"),
+    "bz_flexbo_pgb_ldtb_contract_master": ("PG_FLEXBO", "PGB_LDTB_CONTRACT_MASTER"),
+    "bz_flexbo_pgb_los_contract_fields_tdate": ("PG_FLEXBO", "PGB_LOS_CONTRACT_FIELDS_TDATE"),
+    "bz_los_app_loan_disbursement": ("PG_LOS", "LOAN_DISBURSEMENT"),
+    "bz_los_app_facility": ("PG_LOS", "FACILITY"),
+    "bz_los_app_product": ("PG_LOS", "PRODUCT"),
+    "bz_t24core_customer": ("PG_T24CORE", "CUSTOMER"),
+    "bz_ebanking_col_udf_value": ("PG_EBANKING", "COL_UDF_VALUE"),
+    "bz_flexbo_pgb_contract_udf_map": ("PG_FLEXBO", "PGB_CONTRACT_UDF_MAP"),
+    "bz_flexbo_pgbld_contract_udfield_hist": ("PG_FLEXBO", "PGBLD_CONTRACT_UDFIELD_HIST"),
+    "bz_t24core_mb_mg_saving_multi": ("PG_T24CORE", "MB_MG_SAVING_MULTI"),
+    "bz_flexbo_pgbld_rt_contract_udfield_hist": ("PG_FLEXBO", "PGBLD_RT_CONTRACT_UDFIELD_HIST"),
+    "bz_source_saoke_mvmt": ("PG_SAOKE", "SAOKE_MVMT"),
+    "bz_source_saoke_crb": ("PG_SAOKE", "SAOKE_CRB"),
+    "bz_t24core_stmt_entry": ("PG_T24CORE", "STMT_ENTRY"),
+    "bz_t24core_pd_payment_due_his_mv": ("PG_T24CORE", "PD_PAYMENT_DUE_HIS_MV"),
+    "bz_t24core_pd_payment_due": ("PG_T24CORE", "PD_PAYMENT_DUE"),
+    "bz_t24core_company": ("PG_T24CORE", "COMPANY"),
+    "bz_pg_t24core_currency": ("PG_T24CORE", "CURRENCY"),
+    "bz_pg_t24core_currency_his": ("PG_T24CORE", "CURRENCY_HIS"),
 }
 
 def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
     """Loads all ingested Bronze Iceberg tables into temporary views for Spark SQL queries."""
     for trg, schema_str in BRONZE_TABLE_SCHEMAS.items():
-        schema_name = BRONZE_SCHEMA_MAP.get(trg, "PG_T24CORE")
-        iceberg_path = f"s3a://bronze/{schema_name}/{trg.upper()}/data/"
+        schema_name, raw_table_name = BRONZE_TABLE_LOCATION_MAP.get(trg, ("PG_T24CORE", trg.upper()))
+        iceberg_path = f"s3a://bronze/{schema_name}/{raw_table_name}/data/"
         try:
             df = read_parquet(spark, iceberg_path)
             df.createOrReplaceTempView(trg)
