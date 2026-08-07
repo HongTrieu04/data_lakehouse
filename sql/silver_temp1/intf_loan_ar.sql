@@ -6,15 +6,15 @@
 
 SELECT 
     current_date()                                      AS CDR_DT,
-    a.AR_CODE,
+    b.AR_CODE,
     b.EFF_DT,
-    a.PD_CGY_CODE,
+    COALESCE(a.PD_CGY_CODE, b.PD_CODE)                  AS PD_CGY_CODE,
     b.PPR_CTR_NBR,
-    c.OU_CODE,
+    COALESCE(c.OU_CODE, a.OU_CODE)                      AS OU_CODE,
     a.SUB_PD_CODE,
-    a.CST_CODE,
+    COALESCE(a.CST_CODE, b.CST_CODE)                    AS CST_CODE,
     c.AR_LCS_TP_CODE,
-    a.MUD_CODE,
+    COALESCE(a.MUD_CODE, b.AR_PPS_TP_CODE)              AS MUD_CODE,
     c.FNC_ST_CODE,
     b.CCY_CODE,
     b.MAT_DT,
@@ -26,7 +26,7 @@ SELECT
     d.PNY_RATE,
     d.ODUE_INT_RATE,
     d.MRGN_RATE,
-    a.CDR_DT                                            AS TXN_DT,
+    COALESCE(a.CDR_DT, current_date())                  AS TXN_DT,
     COALESCE(k.TOT_ACR_INT_AMT_FCY, 0)                  AS ODUE_IN_AMT,
     b.PD_CODE,
     c.DSBR_PRPSL_OFCR,
@@ -54,11 +54,11 @@ SELECT
     '0'                                                 AS ODUE_PE_AMT,
     '0'                                                 AS ODUE_PS_AMT,
     current_timestamp()                                 AS SYS_UDT_DT
-FROM ar_bal a
-LEFT JOIN loan_ar b ON (a.AR_ID = b.AR_ID OR a.AR_CODE = b.AR_CODE)
-LEFT JOIN loan_ar_prfl c ON a.AR_ID = c.AR_ID
-LEFT JOIN ar_rate_hist d ON (a.AR_ID = d.AR_ID OR a.AR_CODE = d.AR_CODE)
-LEFT JOIN ar_dlq_smy e ON (a.AR_ID = e.AR_ID OR a.AR_CODE = e.AR_CODE)
+FROM loan_ar b
+LEFT JOIN ar_bal a ON (b.AR_ID = a.AR_ID OR b.AR_CODE = a.AR_CODE)
+LEFT JOIN loan_ar_prfl c ON b.AR_ID = c.AR_ID
+LEFT JOIN ar_rate_hist d ON (b.AR_ID = d.AR_ID OR b.AR_CODE = d.AR_CODE)
+LEFT JOIN ar_dlq_smy e ON (b.AR_ID = e.AR_ID OR b.AR_CODE = e.AR_CODE)
 LEFT JOIN (
     SELECT ORIG_AR_ID,
            SUM(datediff(current_date(), PNP_PAST_DUE_DT)) + 1 AS SO_NGAY_QH_GOC,
@@ -68,9 +68,9 @@ LEFT JOIN (
            SUM(COALESCE(ADDITION_DYS_IN_ARS, 0)) AS SNQH_CHUYENDOI
     FROM ar_dlq_smy 
     GROUP BY ORIG_AR_ID
-) e1 ON (e1.ORIG_AR_ID = a.AR_ID OR e1.ORIG_AR_ID = a.AR_CODE)
+) e1 ON (e1.ORIG_AR_ID = b.AR_ID OR e1.ORIG_AR_ID = b.AR_CODE)
 LEFT JOIN exg_rate f ON b.CCY_CODE = f.FRST_CCY_CODE
-LEFT JOIN ou i ON a.OU_CODE = i.OU_CODE
+LEFT JOIN ou i ON COALESCE(a.OU_CODE, c.OU_CODE) = i.OU_CODE
 LEFT JOIN (
     SELECT ORIG_AR_ID,
            SUM(TOT_ACR_INT_AMT_FCY) AS TOT_ACR_INT_AMT_FCY,
@@ -79,4 +79,4 @@ LEFT JOIN (
            SUM(TOT_INT_ODUE_AMT_FCY) AS TOT_INT_ODUE_AMT_FCY
     FROM ast_ar_int_smy 
     GROUP BY ORIG_AR_ID
-) k ON (a.AR_ID = k.ORIG_AR_ID OR a.AR_CODE = k.ORIG_AR_ID);
+) k ON (b.AR_ID = k.ORIG_AR_ID OR b.AR_CODE = k.ORIG_AR_ID);
