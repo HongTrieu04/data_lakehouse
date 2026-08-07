@@ -1,4 +1,5 @@
 import os
+from pyspark.sql.functions import lit
 from spark_jobs.common.io_utils import read_parquet
 
 BRONZE_TABLE_SCHEMAS = {
@@ -25,12 +26,20 @@ BRONZE_TABLE_SCHEMAS = {
     "bz_pg_t24core_currency_his": "ID string, MID_REVAL_RATE string, DATE_TIME string, CURR_NO string, BRZ_LOAD_DT timestamp, SRC_SYSTEM string, ETL_BATCH_ID string",
 }
 
+def _align_df_to_schema(spark, df, schema_str: str):
+    expected_schema = spark.createDataFrame([], schema_str).schema
+    for field in expected_schema.fields:
+        if field.name not in df.columns:
+            df = df.withColumn(field.name, lit(None).cast(field.dataType))
+    return df.select([field.name for field in expected_schema.fields])
+
 def load_all_bronze_views(spark, etl_date: str = "2026-08-06"):
     """Loads all ingested Bronze Parquet tables into temporary views for Spark SQL queries."""
     for trg, schema_str in BRONZE_TABLE_SCHEMAS.items():
         path = f"s3a://bronze/{trg}/{etl_date}/"
         try:
             df = read_parquet(spark, path)
+            df = _align_df_to_schema(spark, df, schema_str)
             df.createOrReplaceTempView(trg)
         except Exception:
             # Fallback for empty/missing Parquet directories to prevent UnresolvedRelation errors
